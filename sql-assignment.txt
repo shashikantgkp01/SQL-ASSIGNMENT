@@ -1,62 +1,1655 @@
-###QUES NO 1
-create database sql_ass;
-use sql_ass;
+create database sql_challange;
+use sql_challange;
+
+######Q1. Query all columns for all American cities in the CITY table with populations larger than 100000.
+The CountryCode for America is USA.
+
+
+CREATE TABLE city (
+	`ID` int, 
+	`NAME` VARCHAR(17) NOT NULL, 
+	`COUNTRYCODE` VARCHAR(5) NOT NULL, 
+	`DISTRICT` VARCHAR(20) NOT NULL, 
+	`POPULATION` int
+);
+
+load data infile
+'S:/city_data.csv'
+into table city
+fields terminated by ','
+enclosed by '"'
+lines terminated by '\n'
+ignore 1 rows;
+
+select * from city where countrycode ='USA' and population > 100000;
+
+#####Q2. Query the NAME field for all American cities in the CITY table with populations larger than 120000.
+The CountryCode for America is USA.
+
+select * from city where countrycode ='USA' and population >  120000;
+
+######Q3. Query all columns (attributes) for every row in the CITY table
+
+select * from city;
+
+####Q4. Query all columns for a city in CITY with the ID 1661
+
+select * from city where id = 1661;
+
+####Q5. Query all attributes of every Japanese city in the CITY table. The COUNTRYCODE for Japan is
+JPN.
+          or
+          
+#####Q6. Query the names of all the Japanese cities in the CITY table. The COUNTRYCODE for Japan is
+JPN.
+
+
+select * from city where countrycode = 'JPN';
+
+
+#####Q7. Query a list of CITY and STATE from the STATION table.
+The STATION table is described as follows:
+
+
+
+CREATE TABLE station (
+	`Id` int NOT NULL, 
+	`City` VARCHAR(23) NOT NULL, 
+	`State` VARCHAR(2) NOT NULL, 
+	`Lat_N` int NOT NULL, 
+	`Long_W` int
+);
+
+load data infile 
+'S:/station.csv'
+into table station
+fields terminated by ','
+enclosed by '"'
+lines terminated by '\n'
+ignore 1 rows;
+
+select city,state from station;
+
+
+####Q8. Query a list of CITY names from STATION for cities that have an even ID number. Print the results
+in any order, but exclude duplicates from the answer.
+
+
+select distinct city from station where id%2 =0;
+
+####Q9. Find the difference between the total number of CITY entries in the table and the number of
+distinct CITY entries in the table.
+
+select count(city)-count(distinct(city)) from station;
+
+####Q10. Query the two cities in STATION with the shortest and longest CITY names, as well as their
+respective lengths (i.e.: number of characters in the name). If there is more than one smallest or
+largest city, choose the one that comes first when ordered alphabetically.
+
+
+select max(length(city)) as longest_name , min(length(city)) as short_name from station order by city;
+
+
+####Q11. Query the list of CITY names starting with vowels (i.e., a, e, i, o, or u) from STATION. Your result
+cannot contain duplicates.
+
+
+select distinct city from station where city regexp '^[aeiou]';
+
+
+####Q12. Query the list of CITY names ending with vowels (a, e, i, o, u) from STATION. Your result cannot
+contain duplicates.
+
+
+select distinct city from station where city regexp'[aeiou]$';
+
+
+####Q13. Query the list of CITY names from STATION that do not start with vowels. Your result cannot
+contain duplicates
+
+select distinct city from station where city not regexp '^[aeiou]';
+
+
+####Q14. Query the list of CITY names from STATION that do not end with vowels. Your result cannot
+contain duplicates.
+
+select distinct city from station where city not regexp '[aeiou]$';
+
+
+####Q15. Query the list of CITY names from STATION that either do not start with vowels or do not end
+with vowels. Your result cannot contain duplicates.
+
+                  or
+####Q16. Query the list of CITY names from STATION that do not start with vowels and do not end with
+vowels. Your result cannot contain duplicates.
+
+select distinct city from station where city not regexp'^[aeiou].*[aeiou]$';
+
+
+####Q17. Write an SQL query that reports the products that were only sold in the first quarter of 2019. That is,
+between 2019-01-01 and 2019-03-31 inclusive.
+
+
+create table product(
+product_id int,
+product_name varchar(60),
+unit_price int,
+primary key(product_id)
+);
+
+insert into product values 
+(1, 'S8', 1000),
+(2 ,'G4' ,800),
+(3 ,'iPhone', 1400);
+
+
 create table sales(
-ord_no int,
-purch_amt float,
-ord_date date,
+seller_id int,
+product_id int,
+buyer_id int,
+sale_date date,
+quantity int,
+price int,
+foreign key(product_id) references product(product_id));
+
+insert into sales values
+(1, 1, 1, '2019-01-21', 2, 2000),
+(1 ,2 ,2 ,'2019-02-17' ,1 ,800),
+(2, 2, 3,'2019-06-02', 1, 800),
+(3 ,3 ,4 ,'2019-05-13',2 ,2800);
+select product_id , product_name from product
+ where product_id not in 
+ (select product_id from sales where sale_date not between '2019-01-01' and '2019-03-31');
+ 
+ 
+ ####Q18. Write an SQL query to find all the authors that viewed at least one of their own articles.
+Return the result table sorted by id in ascending order
+ 
+ create table views(
+article_id int,
+author_id int,
+viewer_id int,
+view_date date);
+
+insert into views values
+(1, 3, 5, '2019-08-01'),
+(1, 3 ,6 ,'2019-08-02'),
+(2, 7, 7 ,'2019-08-01'),
+(2 ,7 ,6 ,'2019-08-02'),
+(4, 7 ,1 ,'2019-07-22'),
+(3 ,4 ,4 ,'2019-07-21'),
+(3, 4 ,4, '2019-07-21');
+
+
+select distinct author_id from views where author_id  in (select viewer_id from views) order by author_id;
+ 
+select author_id from views where author_id = viewer_id group by author_id order by author_id;
+
+
+
+####Q19. Write an SQL query to find the percentage of immediate orders in the table, rounded to 2 decimal
+places.
+
+
+create table delivery(
+delivery_id int primary key,
 customer_id int,
-salesman_id int
+order_date date,
+customer_pref_delivery_date date);
+
+insert into delivery values
+(1, 1, '2019-08-01', '2019-08-02'),
+(2, 5, '2019-08-02' ,'2019-08-02'),
+(3, 1, '2019-08-11', '2019-08-11'),
+(4 ,3 ,'2019-08-24' ,'2019-08-26'),
+(5, 4 ,'2019-08-21', '2019-08-22'),
+(6 ,2 ,'2019-08-11' ,'2019-08-13');
+select round(100*t.immeadiate/count(s.order_date),2) from delivery s,
+(select count(order_date) as immeadiate from delivery where order_date = customer_pref_delivery_date)t;
+
+
+####Q20. Write an SQL query to find the ctr of each Ad. Round ctr to two decimal points
+
+create table ads (
+ad_id int,
+user_id int,
+action enum('Clicked', 'Viewed', 'Ignored'));
+
+insert into ads values
+(1, 1, 'Clicked'),
+(2, 2 ,'Clicked'),
+(3 ,3 ,'Viewed'),
+(5, 5,'Ignored'),
+(1 ,7 ,'Ignored'),
+(2, 7, 'Viewed'),
+(3 ,5 ,'Clicked'),
+(1 ,4, 'Viewed'),
+(2 ,11 ,'Viewed'),
+(1, 2, 'Clicked');
+
+select * from ads;
+
+select ad_id,
+ifnull( round(sum(action = 'Clicked') / sum(action!='Ignored')*100 , 2 ), 0) as ctr from ads
+group by ad_id 
+order by ctr desc , ad_id;
+
+####Q21. Write an SQL query to find the team size of each of the employees.
+Return result table in any order.
+
+create table employee(
+employee_id int primary key,
+team_id int);
+
+insert into employee values
+(1 ,8),
+(2, 8),
+(3 ,8),
+(4, 7),
+(5 ,9),
+(6, 9);
+
+
+select employee_id, count(team_id) over(partition by team_id) as team_size from employee order by employee_id;
+select e.employee_id , (select count(team_id) from employee where team_id = e.team_id) as team_size from employee e order by e.employee_id;
+
+
+####Q22. Write an SQL query to find the type of weather in each country for November 2019.
+The type of weather is:
+● Cold if the average weather_state is less than or equal 15,
+● Hot if the average weather_state is greater than or equal to 25, and
+● Warm otherwise.
+
+
+
+create table country(
+country_id1 int primary key,
+country_name varchar(60));
+drop table country;
+
+insert into country values
+(2 ,'USA'),
+(3, 'Australia'),
+(7 ,'Peru'),
+(5 ,'China'),
+(8 ,'Morocco'),
+(9 ,'Spain');
+
+create table weather(
+country_id int,
+weather_state int,
+day date,
+primary key (country_id,day));
+
+insert into weather values
+(2, 15 ,'2019-11-01'),
+(2, 12 ,'2019-10-28'),
+(2, 12 ,'2019-10-27'),
+(3 ,-2 ,'2019-11-10'),
+(3 ,0 ,'2019-11-11'),
+(3, 3 ,'2019-11-12'),
+(5 ,16, '2019-11-07'),
+(5 ,18 ,'2019-11-09'),
+(5 ,21 ,'2019-11-23'),
+(7 ,25 ,'2019-11-28'),
+(7 ,22 ,'2019-12-01'),
+(7 ,20 ,'2019-12-02'),
+(8 ,25 ,'2019-11-05'),
+(8, 27 ,'2019-11-15'),
+(8 ,31 ,'2019-11-25'),
+(9 ,7 ,'2019-10-23'),
+(9, 3 ,'2019-12-23');
+
+
+select c.country_name,
+case
+    when avg(w.weather_state) <= 15 then 'cold'
+    when avg(w.weather_state) >= 25 then 'hot'
+    else 'warm' end
+ as weather_type from weather w inner join country con w.country_id = c.country_id1 where w.day between '2019-10-31' and '2019-12-01' group by c.country_name ;
+
+
+####Q23. Write an SQL query to find the average selling price for each product. average_price should be
+rounded to 2 decimal places
+
+
+create table prices(
+product_id1 int,
+start_date date,
+end_date date,
+price int,
+primary key (product_id1, start_date, end_date));
+
+
+insert into prices values
+(1,'2019-02-17','2019-02-28',5),
+(1,'2019-03-01','2019-03-22',20),
+(2,'2019-02-01','2019-02-20',15),
+(2,'2019-02-21','2019-03-31',30);
+
+
+create table unitssold(
+product_id int,
+purchase_date date,
+units int);
+
+insert into unitssold values
+(1,'2019-02-25',100),
+(1,'2019-03-01',15),
+(2,'2019-02-10',200),
+(2,'2019-03-22',30);
+
+
+select * from prices p inner join unitssold u on p.product_id1 = u.product_id;
+
+select a.product_id , round( sum(a.units * b.price) / sum(a.units),2) as average_price
+from unitssold a inner join prices b on 
+(a.product_id = b.product_id1 
+and a.purchase_date >= b.start_date
+and a.purchase_date <= b.end_date) group by product_id;
+
+with cte1 as
+(select product_id , price, purchase_date ,units from unitssold u inner join prices p 
+on u.product_id = p.product_id1
+where u.purchase_date >= p.start_date
+and u.purchase_date <= p.end_date)
+select product_id , round(sum(units*price) / sum(units),2) as average_price from cte1 group by product_id;
+
+####Q24. Write an SQL query to report the first login date for each player.
+Return the result table in any order
+
+create table activity(
+player_id int,
+device_id int,
+event_date date,
+games_played int,
+primary key (player_id,event_date));
+
+insert into activity values
+(1,2,'2016-03-01',5),
+(1,2,'2016-05-02',6),
+(2,3,'2017-06-25',1),
+(3,1,'2016-03-02',0),
+(3,4,'2018-07-03',5);
+select * from activity;
+
+select player_id , event_date from (select * ,row_number() over(partition by player_id order by event_date) as frist_login from activity)w
+where frist_login = 1;
+
+
+####Q25. Write an SQL query to report the device that is first logged in for each player.
+Return the result table in any order
+
+select player_id , device_id from (select * ,row_number() over(partition by player_id order by device_id) as frist_login from activity)w
+where frist_login = 1;
+
+
+####Q26. Write an SQL query to get the names of products that have at least 100 units ordered in February 2020
+and their amount
+
+create table products(
+product_id int primary key ,
+product_name varchar(60),
+product_category varchar(60));
+
+insert into products values
+(1,'Leetcode Solutions','Book'),
+(2,'Jewels of Stringology','Book'),
+(3,'HP','Laptop'),
+(4,'Lenovo','Laptop'),
+(5,'Leetcode Kit','T-shirt');
+
+
+create table orders(
+product_id1 int,
+order_date date,
+unit int,
+foreign key (product_id1) references products(product_id));
+
+insert into orders values
+(1,'2020-02-05',60),
+(1,'2020-02-10',70),
+(2,'2020-01-18',30),
+(2,'2020-02-11',80),
+(3,'2020-02-17',2),
+(3,'2020-02-24',3),
+(4,'2020-03-01',20),
+(4,'2020-03-04',30),
+(4,'2020-03-04',60),
+(5,'2020-02-25',50),
+(5,'2020-02-27',50),
+(5,'2020-03-01',50);
+
+select * from (select product_name,sum(unit) as total_sale from products p inner join orders o 
+on (p.product_id = o.product_id1
+and order_date between '2020-02-01' and '2020-02-28')
+group by product_name)r where total_sale >= 100;
+
+
+####Q27. Write an SQL query to find the users who have valid emails.
+A valid e-mail has a prefix name and a domain where:
+● The prefix name is a string that may contain letters (upper or lower case), digits, underscore
+'_', period '.', and/or dash '-'. The prefix name must start with a letter.
+● The domain is '@leetcode.com'.
+Return the result table in any order.
+
+
+create table users(
+user_id int primary key,
+name varchar(60),
+mail varchar(60));
+
+insert into users values 
+(1,'Winston','winston@leetcode.com'),
+(2,'Jonathan','jonathanisgreat'),
+(3,'Annabelle','bella-@leetcode.com'),
+(4,'Sally','sally.come@leetcode.com'),
+(5,'Marwan','quarz#2020@leetcode.com'),
+(6,'David','david69@gmail.com'),
+(7,'Shapiro','.shapo@leetcode.com');
+
+
+select * from users where mail regexp '^[a-zA-Z0-9][+a-zA-Z0-9._-]*@[leetcode]*\\.[a-z]{2,4}$';
+
+####Q28. Write an SQL query to report the customer_id and customer_name of customers who have spent at
+least $100 in each month of June and July 2020.
+Return the result table in any order
+
+create table customers(
+customer_id int primary key,
+name varchar(60),
+country varchar(60));
+
+insert into customers values
+(1,'Winston','USA'),
+(2,'Jonathan','Peru'),
+(3,'Moustafa','Egypt');
+select * from customers;
+
+
+create table if not exists product1(
+product_id int primary key,
+description varchar(100),
+price int );
+ insert into product1 values
+(10,'LC Phone',300),
+(20,'LC T-Shirt',10),
+(30,'LC Book',45),
+(40,'LC Keychain',2);
+
+
+create table orders1(
+order_id int primary key,
+customer_id1 int,
+product_id1 int,
+order_date date,
+quantity int,
+foreign key (customer_id1) references customers(customer_id),
+foreign key(product_id1) references product1(product_id));
+ 
+insert into orders1 values
+(1,1,10,'2020-06-10',1),
+(2,1,20,'2020-07-01',1),
+(3,1,30,'2020-07-08',2),
+(4,2,10,'2020-06-15',2),
+(5,2,40,'2020-07-01',10),
+(6,3,20,'2020-06-24',2),
+(7,3,30,'2020-06-25',2),
+(9,3,30,'2020-05-08',3);
+
+select customer_id , name
+from customers c , product1 p , orders1 o 
+where c.customer_id = o.customer_id1 and p.product_id = o.product_id1
+group by o.customer_id1 
+having
+(
+	sum(case when order_date like '2020-06%' then price*quantity else 1 end)>=100
+    and
+  sum(case when order_date like '2020-07%' then price*quantity else 1 end)>=100
 );
-insert into sales values (70001,150.5,'2012-10-05',3005,5002),
-(70009,270.65,'2012-09-10',3001,5005),
-(70002,65.26,'2012-10-05',3002,5001),
-(70004,110.5,'2012-08-17',3009,5003),
-(70007,948.5,'2012-09-10',3005,5002),
-(70005,2400.6,'2012-07-27',3007,5001),
-(70008,5760,'2012-09-10',3002,5001),
-(70010,1983.43,'2012-10-10',3004,5006),
-(70003,2480.4,'2012-10-10',3009,5003),
-(70012,250.45,'2012-06-27',3008,5002),
-(70011,75.29,'2012-08-17',3003,5007),
-(70013,3045.6,'2012-04-25',3002,5001);
-
-select ord_date,salesman_id,ord_no,purch_amt from sales;
 
 
-### QUES NO2
+####29. Write an SQL query to report the distinct titles of the kid-friendly movies streamed in June 2020.
+Return the result table in any order.
+
+create table TVprogramm(
+program_date datetime,
+content_id int,
+channel varchar(60),
+primary key (program_date,content_id));
+drop table TVprogramm;
+
+insert into TVprogramm values
+('2020-06-10 08:00',1,'LC-Channel'),
+('2020-05-11 12:00',2,'LC-Channel'),
+('2020-05-12 12:00',3,'LC-Channel'),
+('2020-05-13 14:00',4,'Disney Ch'),
+('2020-06-18 14:00',4,'Disney Ch'),
+('2020-07-15 16:00',5,'Disney Ch');
+
+select * from TVprogramm;
+
+create table content(
+content_id varchar(60) primary key ,
+title varchar(60),
+Kids_content enum ('Y', 'N'), 
+content_type varchar(60));
+
+insert into content values
+(1,'Leetcode Movie','N','Movies'),
+(2,'Alg.for Kids','Y','Series'),
+(3,'Database Sols','N','Series'),
+(4,'Aladdin','Y','Movies'),
+(5,'Cinderella','Y','Movies');
+
+
+select title from content c inner join TVprogramm t 
+on c.content_id = t.content_id
+where program_date like '2020-06%' and Kids_content = 'Y';
+
+
+
+####30.Write an SQL query to find the npv of each query of the Queries table.
+Return the result table in any order.
+
+                    or
+                    ####Q31.
+
+create table NPV(
+id int,
+year int,
+npv int,
+primary key(id,year));
+
+insert into NPV values
+(1,2018,100),
+(7,2020,30),
+(13,2019,40),
+(1,2019,113),
+(2,2008,121),
+(3,2009,12),
+(11,2020,99),
+(7,2019,0);
+
+create table queries(
+id int,
+year int,
+primary key(id,year));
+
+insert into queries values
+(1,2019),
+(2,2008),
+(3,2009),
+(7,2018),
+(7,2019),
+(7,2020),
+(13,2019);
+
+select q.id,n.npv , q.year from NPV n right join queries q
+on n.id=q.id and n.year=q.year
+where q.id is not null;
+
+####Q31. Write an SQL query to show the unique ID of each user, If a user does not have a unique ID replace just
+show null.
+
+
+create table employees(
+id int primary key,
+name varchar(60));
+
+insert into employees values
+(1,'Alice'),
+(7,'Bob'),
+(11,'Meir'),
+(90,'Winston'),
+(3,'Jonathan');
+
+create table employeeuni(
+id int,
+unique_id int,
+primary key (id,unique_id));
+
+insert into employeeuni values
+(3,1),
+(11,2),
+(90,3);
+
+select unique_id , name from employees e left join employeeuni u 
+on e.id=u.id order by name;
+
+
+####Q33. Write an SQL query to report the distance travelled by each user.
+Return the result table ordered by travelled_distance in descending order, if two or more users
+
+create table users1
+(
+id int primary key,
+name varchar(60)
+);
+
+insert into users1 values
+(1 ,'Alice'),
+(2,' Bob'),
+(3 ,'Alex'),
+(4 ,'Donald'),
+(7 ,'Lee');
+insert into users1 values
+(13 ,'Jonathan'),
+(19,' Elvis');
+
+create table rides
+(
+id int primary key,
+user_id int,
+distance int
+);
+
+insert into rides values
+(1,1,120),
+(2,2,317),
+(3,3,222),
+(4,7,100),
+(5,13,312),
+(6,19,50),
+(7,7,120),
+(8,19,400),
+(9,7,230);
+
+select name ,distance_travel from  
+(select name ,ifnull(sum(distance),0) as distance_travel from users1 u left join rides r on u.id = r.user_id group by name )t
+order by distance_travel desc , name;
+
+
+####Q34. insufficient data
+
+
+####Q35.Write an SQL query to:
+● Find the name of the user who has rated the greatest number of movies. In case of a tie,
+return the lexicographically smaller user name.
+● Find the movie name with the highest average rating in February 2020. In case of a tie, return
+the lexicographically smaller movie name
+
+create table movies(
+movie_id int primary key,
+title varchar(60));
+
+insert into movies values
+(1,' Avengers'),
+(2 ,'Frozen 2'),
+(3  ,'Joker');
+
+create table users2(
+user_id int primary key,
+name varchar(60));
+
+insert into users2 values
+(1 ,'Daniel'),
+(2 ,'Monica'),
+(3 ,'Maria'),
+(4 ,'James');
+
+create table movies_rating(
+movie_id1 int,
+user_id1 int,
+rating int,
+created_at date,
+primary key (movie_id1,user_id1));
+
+insert into movies_rating values
+(1 ,1 ,3 ,'2020-01-12'),
+(1 ,2 ,4 ,'2020-02-11'),
+(1 ,3 ,2 ,'2020-02-12'),
+(1 ,4 ,1 ,'2020-01-01'),
+(2 ,1, 5 ,'2020-02-17'),
+(2 ,2 ,2 ,'2020-02-01'),
+(2 ,3, 2 ,'2020-03-01'),
+(3 ,1 ,3 ,'2020-02-22'),
+(3 ,2 ,4 ,'2020-02-25');
+
+
+select name from (select name , count(rating) from users2 u inner join movies_rating m 
+on u.user_id = m.user_id1 inner join movies mv on 
+mv.movie_id = m.movie_id1 group by name order by name limit 1)b
+union
+select title from (select title,avg(rating) over(partition by title) as avg_rating from movies m inner join movies_rating mv 
+on m.movie_id = mv.movie_id1 inner join users2 u
+on u.user_id = mv.user_id1 where created_at like '2020-02%' order by avg_rating desc,title limit 1)a;
+
+
+
+####Q36. Write an SQL query to report the distance travelled by each user.
+Return the result table ordered by travelled_distance in descending order, if two or more users
+travelled the same distance, order them by their name in ascending order.
+
+
+select name ,distance_travel from  
+(select name ,ifnull(sum(distance),0) as distance_travel from users1 u left join rides r on u.id = r.user_id group by name )t
+order by distance_travel desc , name;
+
+
+
+####Q37.Write an SQL query to show the unique ID of each user, If a user does not have a unique ID replace just
+show null.
+Return the result table in any order.
+
+select unique_id , name from employees e left join employeeuni u 
+on e.id=u.id order by name;
+
+
+
+####Q38. Write an SQL query to find the id and the name of all students who are enrolled in departments that no
+longer exist.
+Return the result table in any order
+
+
+create table departments(
+id int primary key ,
+name varchar(60));
+
+insert into departments values
+(1 ,'Electrical Engineering'),
+(7 ,'Computer Engineering'),
+(13 ,'Business Administration');
+
+create table students (
+id int primary key,
+name varchar(60),
+department_id int);
+
+insert into students values
+(23 ,'Alice', 1),
+(1,' Bob', 7),
+(5,' Jennifer', 13),
+(2 ,'John', 14),
+(4 ,'Jasmine', 77),
+(3 ,'Steve', 74),
+(6 ,'Luis', 1),
+(8 ,'Jonathan', 7),
+(7 ,'Daiana', 33),
+(11 ,'Madelynn', 1);
+
+select s.id , s.name from students s left join departments d 
+on s.department_id = d.id where d.id is null;
+
+
+####Q39. Write an SQL query to report the number of calls and the total call duration between each pair of
+distinct persons (person1, person2) where person1 < person2.
+Return the result table in any order.
+
+
+create table calls(
+from_id int,
+to_id int,
+duration int);
+
+insert into calls values 
+(1,2,59),
+(2,1,11),
+(1,3,20),
+(3,4,100),
+(3,4,200),
+(3,4,200),
+(4,3,499);
+
+select least(from_id,to_id) as person1,
+greatest(from_id,to_id) as person1,
+count(*) as call_count,
+sum(duration) as total_duration
+from calls group by 1 , 2;
+
+
+####Q40. Write an SQL query to find the average selling price for each product. average_price should be
+rounded to 2 decimal places
+
+
+select a.product_id , round( sum(a.units * b.price) / sum(a.units),2) as average_price
+from unitssold a inner join prices b on 
+(a.product_id = b.product_id1 
+and a.purchase_date >= b.start_date
+and a.purchase_date <= b.end_date) group by product_id;
+
+
+####Q41. Write an SQL query to report the number of cubic feet of volume the inventory occupies in each
+warehouse.
+Return the result table in any order.
+
+create table warehouse(
+name varchar(60),
+product_id int,
+units int,
+primary key (name,product_id));
+
+insert into warehouse values
+('LCHouse1',1,1),
+('LCHouse1',2,10),
+('LCHouse1',3,5),
+('LCHouse2',1,2),
+('LCHouse2',2,2),
+('LCHouse3',4,1);
+
+
+create table if not exists product2(
+product_id int primary key,
+product_name varchar(60),
+Width int,
+Length int,
+Height int);
+
+insert into product2 values
+(1,'LC-TV',5,50,40),
+(2,'LC-KeyChain',5,5,5),
+(3,'LC-Phone',2,10,10),
+(4,'LC-T-Shirt',4,10,20);
+
+select name , sum(width*length*height*units) as volume_1 from warehouse w inner join product2 p
+on w.product_id = p.product_id group by name ;
+
+
+####Q42. Write an SQL query to report the difference between the number of apples and oranges sold each day.
+Return the result table ordered by sale_date
+
 create table sales1(
-salesman_id int,
-name varchar(50),
-city varchar(50),
-commission float
-);
-insert into sales1 values(5001 , 'James Hoog' , 'New York' , 0.15),
-(5002 , 'Nail Knite' , 'Paris' , 0.13),
-(5005 , 'Pit Alex' , 'London' , 0.11),
-(5006 , 'Mc Lyon' , 'Paris' , 0.14),
-(5007 , 'Paul Adam' , 'Rome' , 0.13),
-(5003 , 'Lauson Hen' , 'San Jose' , 0.12);
-select name,city from sales1 WHERE city = 'Paris';
+sale_date date,
+fruit enum("apples" , "oranges"),
+sold_num int,
+primary key (sale_date,fruit));
 
-### QUES 3
-create table sales2(
-PRO_ID int,
-PRO_NAME varchar(50),
-PRO_PRICE float,
-PRO_COM int 
+insert into sales1 values
+('2020-05-01','apples',10),
+('2020-05-01','oranges',8),
+('2020-05-02','apples',15),
+('2020-05-02','oranges',15),
+('2020-05-03','apples',20),
+('2020-05-03','oranges',0),
+('2020-05-04','apples',15),
+('2020-05-04','oranges',16);
+
+select a.sale_date , a.sold_num - o.sold_num from 
+sales1 a left join sales1 o on a.sale_date = o.sale_date
+where a.fruit = 'apples' and o.fruit = 'oranges';
+
+
+
+####Q43. Write an SQL query to report the fraction of players that logged in again on the day after the day they
+first logged in, rounded to 2 decimal places. In other words, you need to count the number of players
+that logged in for at least two consecutive days starting from their first login date, then divide that
+number by the total number of players.
+
+ 
+with cte as (
+select player_id, min(event_date) as frist_login from activity group by player_id)
+select round((count(distinct c.player_id)/(select count(distinct player_id) from activity)),2) as fraction 
+from cte  c  left join activity a on c.player_id = a.player_id and datediff(c.frist_login,a.event_date)=-1;
+
+
+####Q44. Write an SQL query to report the managers with at least five direct reports.
+Return the result table in any order
+
+
+create table employee2(
+id int primary key,
+name varchar(60),
+department varchar(60),
+managerId int);
+
+insert into employee2 (id,name,department) values
+(101,'John','A')
+
+insert into employee2  values
+(102,'Dan','A',101),
+(103,'James','A',101),
+(104,'Amy','A',101),
+(105,'Anne','A',101),
+(106,'Ron','B',101);
+
+select a.name from employee2 as a inner join employee2 as  b 
+on a.id = b.managerId group by name 
+having count(distinct b.id) >=5;
+
+
+####Q45. Write an SQL query to report the respective department name and number of students majoring in
+each department for all departments in the Department table (even ones with no current students).
+Return the result table ordered by student_number in descending order. In case of a tie, order them by
+dept_name alphabetically
+
+
+create table department
+(
+dept_id int primary key,
+dept_name varchar(60)
 );
-INSERT INTO sales2 values (101,'Motherboard',3200.00,15),
-(102,'Keyboard',450.00,16),
-(103,'ZIP drive',250.00,14),
-(104,'Speaker',550.00,16),
-(105,'Monitor',5000.00,11),
-(106,'DVD drive',900.00,12),
-(107,'CD drive',800.00,12),
-(108,'Printer',2600.00,13),
-(109,'Refill cartridge',350.00 ,13),
-(110,'Mouse',250.00,12);
-select * from sales2 where PRO_PRICE > 200 and PRO_PRICE <600;
-select * from (select * from sales2 where PRO_PRICE >= 550 ORDER BY PRO_PRICE DESC)t ORDER BY PRO_NAME;
-SELECT * from sales WHERE ord_date = '2012-09-10' and salesman_id > 5005 OR purch_amt > 1000;
-select * from sales;
+
+insert into department values
+(1, 'Engineering'),
+(2 ,'Science'),
+(3 ,'Law');
+
+
+create table student(
+student_id int primary key,
+student_name varchar(60),
+gender varchar(8),
+dept_id1 int,
+foreign key (dept_id1) references department(dept_id));
+
+
+insert into student values
+(1 ,'Jack',' M',1),
+(2 ,'Jane',' F', 1),
+(3 ,'Mark',' M ',2);
+
+select dept_name , ifnull(count(student_name),0) as student_number from department d left join student s 
+on d.dept_id = s.dept_id1 group by dept_name;
+
+
+####Q46. Write an SQL query to report the customer ids from the Customer table that bought all the products in
+the Product table.
+Return the result table in any order
+
+
+create table customer(
+customer_id int,
+product_key1 int,
+foreign key (product_key1) references product11(product_key) );
+
+
+
+insert into customer values
+(1, 5),
+(2 ,6),
+(3 ,5),
+(3 ,6),
+(1 ,6);
+
+create table product11(
+product_key int primary key);
+
+insert into product11 values
+(5),
+(6);
+
+select c.customer_id from (select customer_id , count(distinct product_key1) as dis_pro_key from customer group by customer_id ) c
+where c.dis_pro_key in (select count(distinct product_key) from product11);
+
+
+####Q47. Write an SQL query that reports the most experienced employees in each project. In case of a tie,
+report all employees with the maximum number of experience years.
+Return the result table in any order.
+
+create table project(
+project_id int,
+employee_id int,
+primary key(project_id,employee_id));
+
+insert into project values
+(1 ,1),
+(1 ,2),
+(1,3),
+(2 ,1),
+(2 ,4);
+
+
+create table employee3(
+employee_id int primary key,
+name varchar(60),
+experience_years int);
+
+insert into employee3 values
+(1 ,'Khaled', 3),
+(2, 'Ali', 2),
+(3 ,'John', 3),
+(4 ,'Doe', 2);
+
+select employee_id , project_id from(
+select p.project_id,p.employee_id,e.experience_years,dense_rank() over(partition by p.project_id order by e.experience_years desc) as rnk
+from project as p join employee3 as e on p.employee_id = e.employee_id
+) m
+where rnk =1;
+
+
+####Q48. Write an SQL query that reports the books that have sold less than 10 copies in the last year,
+excluding books that have been available for less than one month from today. Assume today is
+2019-06-23.
+Return the result table in any order.
+
+
+create table book(
+book_id int primary key,
+name varchar(60),
+available_from date);
+
+insert into book values
+(1 ,"Kalila And Demna" ,'2010-01-01'),
+(2 ,"28 Letters" ,'2012-05-12'),
+(3 ,"The Hobbit" ,'2019-06-10'),
+(4 ,"13 Reasons Why",' 2019-06-01'),
+(5 ,"The Hunger Games" ,'2008-09-21');
+
+#### INSUFFICIENT DATA
+
+###Q49. Write a SQL query to find the highest grade with its corresponding course for each student. In case of
+a tie, you should find the course with the smallest course_id.
+Return the result table ordered by student_id in ascending order
+
+
+create table enrollment(
+student_id int,
+course_id int,
+grade int,
+primary key (student_id,course_id));
+
+insert into enrollment values
+(2,2,95),
+(2,3,95),
+(1,1,90),
+(1,2,99),
+(3,1,80),
+(3,2,75),
+(3,3,82);
+
+select  student_id, course_id,grade from(
+select *,row_number() over(partition by student_id order by grade desc) as new_rank from enrollment
+)t where new_rank = 1 order by student_id,course_id;
+
+
+####Q50. Write an SQL query to find the winner in each group.
+Return the result table in any order.
+
+
+
+create table player(
+player_id int primary key, 
+group_id int );
+
+insert into player values
+(15 ,1),
+(25 ,1),
+(30 ,1),
+(45 ,1),
+(10 ,2),
+(35 ,2),
+(50 ,2),
+(20 ,3),
+(40 ,3);
+
+
+create table matches(
+match_id int primary key,
+first_player int,
+second_player int,
+first_score int,
+second_score int);
+
+insert into matches values 
+(1,15,45,3,0),
+(2,30,25,1,2),
+(3,30,15,2,0),
+(4,40,20,5,2),
+(5,35,50,1,1);
+
+
+select group_id,player_id from(
+select p.player_id,p.group_id,sum(points) as total_points from player p inner join 
+(
+select first_player as player_id, first_score as points from matches 
+union 
+select second_player as player_id , second_score as points from matches
+) n
+on p.player_id = n.player_id group by n.player_id order by group_id,total_points desc,player_id
+)g
+group by group_id;
+
+
+####Q51. Write an SQL query to report the name, population, and area of the big countries.
+Return the result table in any order
+
+create table world(
+name varchar(100) primary key,
+continent varchar(60),
+area int,
+population int,
+gdp bigint);
+
+
+insert into world values
+('Afghanistan','Asia',652230,25500100,20343000000),
+('Albania','Europe',28748,2831741,12960000000),
+('Algeria','Africa',2381741,37100000,188681000000),
+('Andorra','Europe',468,78115,3712000000),
+('Angola','Africa',1246700,20609294,100990000000);
+
+select name , population,area from world where area >= 3000000 or population >=25000000;
+
+
+
+
+create database sql_assign_page2;
+use sql_assign_page2;
+
+
+
+####Q52. Write an SQL query to report the names of the customer that are not referred by the customer with id
+= 2.
+Return the result table in any order.
+
+
+create table customer(
+id int primary key,
+name varchar(60),
+referee_id int);
+
+insert into customer values
+(1 ,'Will', null),
+(2 ,'Jane', null),
+(3 ,'Alex ',2),
+(4 ,'Bill', null),
+(5 ,'Zack', 1),
+(6 ,'Mark', 2);
+
+select name from customer where referee_id < 2 or referee_id is null;
+
+####Q53. Write an SQL query to report all customers who never order anything.
+Return the result table in any order.
+
+create table customer1(
+id int primary key,
+name varchar(60));
+
+insert into customer1 values
+(1,' Joe'),
+(2 ,'Henry'),
+(3 ,'Sam'),
+(4 ,'Max');
+
+create table orders(
+id int primary key,
+customerId int,
+foreign key (customerId) references customer1(id));
+
+insert into orders values
+(1 ,3),
+(2 ,1);
+
+
+select name from orders o right join customer1 c 
+on o.customerID = c.id
+where o.customerID is null;
+
+####Q54. Write an SQL query to find the team size of each of the employees.
+Return result table in any order.
+
+
+create table if not exists employee(
+employee_id int primary key ,
+team_id int);
+
+
+insert into employee values
+(1 ,8),
+(2 ,8),
+(3 ,8),
+(4 ,7),
+(5 ,9),
+(6 ,9);
+
+select * from employee;
+
+select employee_id , count(team_id) over(partition by team_id) from employee order by employee_id;
+
+
+####Q55. Write an SQL query to find the countries where this company can invest.
+Return the result table in any order
+
+create table person(
+id int primary key,
+name varchar(60),
+phone_number varchar(60));
+
+
+insert into person values
+(3,'Jonathan','051-1234567'),
+(12,' Elvis','051-7654321'),
+(1,'Moncef ','212-1234567'),
+(2,' Maroua ','212-6523651'),
+(7,'Meir','972-1234567'),
+(9,' Rachel','972-0011100');
+
+
+create table country(
+name varchar(60),
+country_code varchar(60) primary key);
+
+insert into country values
+('Peru','051'),
+('Israel' ,'972'),
+('Morocco','212'),
+('Germany ','49'),
+('Ethiopia','251');
+
+
+create table calls(
+caller_id int,
+callee_id int,
+duration int);
+
+
+insert into calls values
+(1,9,33),
+(2,9,4),
+(1,2,59),
+(3,12,102),
+(3,12,330),
+(12,3,5),
+(7,9,13),
+(7,1,3),
+(9,7,1),
+(1,7,7);
+
+select substring(phone_number ,1,3) as code1 from person;
+
+
+select c.name as country_name from person p inner join country c
+on substring(p.phone_number ,1,3) = c.country_code
+inner join calls cl on (p.id = cl.caller_id or p.id=cl.callee_id)
+group by country_name
+having avg(duration) > (select avg(duration) from calls);
+
+
+####Q56. Write an SQL query to report the device that is first logged in for each player.
+Return the result table in any order
+
+create table activity(
+player_id int,
+device_id int,
+event_date date,
+games_played int,
+primary key (player_id,event_date));
+
+insert into activity values
+(1,2,'2016-03-01',5),
+(1,2,'2016-05-02',6),
+(2,3,'2017-06-25',1),
+(3,1,'2016-03-02',0),
+(3,4,'2018-07-03',5);
+
+
+
+select player_id,device_id from(
+select * , row_number() over(partition by player_id order by device_id) as rnk
+ from activity)w
+ where rnk =1;
+ 
+ ####Q57. Write an SQL query to find the customer_number for the customer who has placed the largest
+number of orders.
+
+ 
+ 
+ create table orders1(
+ order_number int primary key,
+customer_number int);
+
+insert into orders1 values
+(1,1),
+(2,2),
+(3,3),
+(4,3);
+
+select customer_number from (
+select *,row_number() over(partition by customer_number) as rnk from orders1)t
+ order by rnk desc limit 1;
+ 
+ ####Q58. Write an SQL query to report all the consecutive available seats in the cinema.
+Return the result table ordered by seat_id in ascending order.
+
+ 
+ create table cinema(
+ seat_id int auto_increment primary key,
+free bool);
+
+insert into cinema values
+(1,1),
+(2,0),
+(3,1),
+(4,1),
+(5,1);
+
+select seat_id from (
+select * , row_number() over(partition by free) as rnk  from cinema
+)e
+ where rnk >=2 order by seat_id;
+ 
+ ####Q59. Write an SQL query to report the names of all the salespersons who did not have any orders related to
+the company with the name "RED".
+Return the result table in any order
+
+
+create table salesperson(
+sales_id int primary key,
+name varchar(60),
+salary int,
+commission_rate int,
+hire_date varchar(60));
+
+
+insert into salesperson values
+(1,'John',100000,6,'4/1/2006'),
+(2,'Amy',12000,5,'5/1/2010'),
+(3,'Mark',65000,12,'12/25/2008'),
+(4,'Pam',25000,25,'1/1/2005'),
+(5,'Alex',5000,10,'2/3/2007');
+
+create table company(
+com_id int primary key,
+name varchar(60),
+city varchar(60));
+
+insert into company values
+(1,'RED','Boston'),
+(2,'ORANGE','New,York'),
+(3,'YELLOW','Boston'),
+(4,'GREEN','Austin');
+
+create table orders2 (
+order_id int,
+order_date varchar(30) primary key,
+com_id1 int,
+sales_id1 int,
+amount int,
+foreign key(com_id1) references company(com_id),
+foreign key(sales_id1) references salesperson(sales_id));
+
+
+insert into orders2 values(1,'1/1/2014',3,4,10000),
+(2,'2/1/2014',4,5,5000),
+(3,'3/1/2014',1,1,50000),
+(4,'4/1/2014',1,4,25000);
+
+
+select  name as sales_man from salesperson where sales_id not in (
+select sales_id1  from orders2 o inner join company c
+on o.com_id1 = c.com_id right join salesperson s
+on o.sales_id1 = s.sales_id
+where c.name = 'RED'
+);
+
+
+####Q60. Write an SQL query to report for every three line segments whether they can form a triangle.
+Return the result table in any order
+
+
+create table traingle(x int,
+y int,
+z int,
+primary key(x,y,z));
+
+insert into traingle values
+(13,15,30),
+(10,20,15);
+
+select * , 
+case
+	when (x+y) > z then 'yes'
+    else 'no'
+    end as finial_comment
+    from traingle;
+
+
+####Q61. Write an SQL query to report the shortest distance between any two points from the Point table.
+
+
+create table points(x int primary key);
+
+insert into points values (-1),(0),(2);
+
+select p1.x as col1,p2.x as col2, abs(p1.x - p2.x) as dist from points p1 inner join points p2 
+on p1.x != p2.x order by dist limit 1;
+
+
+####Q62. Write a SQL query for a report that provides the pairs (actor_id, director_id) where the actor has
+cooperated with the director at least three times.
+
+create table actordirector(
+actor_id int,
+director_id int,
+`timestamp` int primary key);
+
+insert into actordirector values(1,1,0),
+(1,1,1),
+(1,1,2),
+(1,2,3),
+(1,2,4),
+(2,1,5),
+(2,1,6);
+
+select actor_id,director_id from (
+select *,row_number() over(partition by director_id) as rnk from actordirector
+)y
+where actor_id = director_id and rnk >=3
+group by actor_id;
+
+####Q63. Write an SQL query that reports the product_name, year, and price for each sale_id in the Sales table.
+Return the resulting table in any order.
+
+
+create table sales(
+sale_id int,
+product_id int,
+year int,
+quantity int,
+price int,
+primary key (sale_id,year),
+foreign key (product_id) references product(product_id));
+
+
+insert into sales values(1,100,2008,10,5000),
+(2,100,2009,12,5000),
+(7,200,2011,15,9000);
+
+create table product (
+product_id int primary key,
+product_name varchar(60));
+
+insert into product values(100,'Nokia'),
+(200,'Apple'),
+(300,'Samsung');
+
+
+select product_name,year,price from sales s, product p 
+where s.product_id = p.product_id;
+
+
+####Q64. Write an SQL query that reports the average experience years of all the employees for each project,
+rounded to 2 digits.
+
+
+
+create table project(
+project_id int,
+employee_id int,
+primary key (project_id,employee_id));
+
+insert into project values(1,1),
+(1,2),
+(1,3),
+(2,1),
+(2,4);
+
+create table if not exists employee2(employee_id1 int primary key,
+name varchar(60),
+experience_years int);
+
+
+insert into employee2 values (1,'Khaled',3),
+(2,'Ali',2),
+(3,'John',1),
+(4,'Doe',2);
+
+
+select project_id , round(avg(experience_years),2) from (
+select * from employee2 as e inner join project as p
+on e.employee_id1 = p.employee_id 
+)r 
+group by 1;
+
+
+####Q65. Write an SQL query that reports the best seller by total sales price, If there is a tie, report them all.
+Return the result table in any order
+
+create table if not exists product1(product_id int primary key,
+product_name varchar(60),
+unit_price int);
+
+insert into product1 values(1,'S8',1000),
+(2,'G4',800),
+(3,'iPhone',1400);
+
+
+create table if not exists sales1(seller_id int,
+product_id1 int,
+buyer_id int,
+sale_date date,
+quantity int,
+price int,
+foreign key(product_id1) references product1(product_id));
+
+insert into sales1 values(1,1,1,'2019-01-21',2,2000),
+(1,2,2,'2019-02-17',1,800),
+(2,2,3,'2019-06-02',1,800),
+(3,3,4,'2019-05-13',2,2800);
+
+
+
+select seller_id , sum(price) as total_price from sales1 group by seller_id 
+having total_price in (select max(price) from sales1);
+
+
+####Q66. Write an SQL query that reports the buyers who have bought S8 but not iPhone. Note that S8 and
+iPhone are products present in the Product table.
+
+
+select buyer_id from sales1 s inner join product1 p 
+on s.product_id1 = p.product_id where product_name = 'S8' and product_name != 'iphone';
+
+
+####Q67. Write an SQL query to compute the moving average of how much the customer paid in a seven days
+window (i.e., current day + 6 days before). average_amount should be rounded to two decimal places.
+Return result table ordered by visited_on in ascending order.
+
+
+create table customer2(customer_id int,
+name varchar(60),
+visited_on date,
+amount int,
+primary key(customer_id,visited_on));
+
+insert into customer2 values(1,'Jhon','2019-01-01',100),
+(2,'Daniel','2019-01-02',110),
+(3,'Jade','2019-01-03',120),
+(4,'Khaled','2019-01-04',130),
+(5,'Winston','2019-01-05',110),
+(6,'Elvis','2019-01-06',140),
+(7,'Anna','2019-01-07',150),
+(8,'Maria','2019-01-08',80),
+(9,'Jaze','2019-01-09',110),
+(1,'Jhon','2019-01-10',130),
+(3,'Jade','2019-01-10',150);
+
+select t1.visited_on , sum(t2.amount) as amount , round(avg(t2.amount),2) as avg_sale from 
+(
+select visited_on , sum(amount) as amount from customer2 group by visited_on) as t1
+inner join 
+(select visited_on , sum(amount) as amount from customer2 group by visited_on) as t2 on
+t2.visited_on between date_sub(t1.visited_on , interval 6 day) and t1.visited_on
+group by t1.visited_on
+having count(1) =7;
+
+
+####Q68. Write an SQL query to find the total score for each gender on each day.
+Return the result table ordered by gender and day in ascending order.
+
+
+create table scores(
+player_name varchar(60),
+gender varchar(60),
+day date,
+score_points int,
+primary key (gender,day));
+
+insert into scores values('Aron','F','2020-01-01',17),
+('Alice','F','2020-01-07',23),
+('Bajrang','M','2020-01-07',7),
+('Khali','M','2019-12-25',11),
+('Slaman','M','2019-12-30',13),
+('Joe','M','2019-12-31',3),
+('Jose','M','2019-12-18',2),
+('Priya','F','2019-12-31',23),
+('Priyanka','F','2019-12-30',17);
+
+
+select t.gender , t.day , sum(p.score_points) as total_score from scores t , scores p 
+where t.gender = p.gender and t.day >= p.day
+group by t.gender , t.day
+order by t.gender , t.day;
+
+
+####Q69.Write an SQL query to find the start and end number of continuous ranges in the table Logs.
+Return the result table ordered by start_id
+
+create table logs1( log_id int);
+insert into logs1 values(1),(2),(3),(7),(8),(10);
+
+
+select min(log_id) as start_date , max(log_id) as end_date from 
+(
+select * , row_number() over(order by log_id) as rnk from logs1
+)e
+group by (log_id - rnk);
+
+
+####Q70. Write an SQL query to find the number of times each student attended each exam.
+Return the result table ordered by student_id and subject_name.
+
+
+create table if not exists students(
+student_id int primary key,
+student_name varchar(60));
+
+insert into students values(1,'Alice'),
+(2,'Bob'),
+(13,'John'),
+(6,'Alex');
+
+
+create table subjects(subject_name varchar(60) primary key);
+
+
+insert into subjects values('Math'),
+('Physics'),
+('Programming');
+
+
+
+create table examinations(student_id int,
+subject_name varchar(60),
+foreign key (student_id) references students(student_id),
+foreign key (subject_name) references subjects(subject_name));
+
+insert into examinations values(1,'Math'),
+(1,'Physics'),
+(1,'Programming'),
+(2,'Programming'),
+(1,'Physics'),
+(1,'Math'),
+(13,'Math'),
+(13,'Programming'),
+(13,'Physics'),
+(2,'Math'),
+(1,'Math');
+
+
+select  st.student_id ,st.student_name ,s.subject_name,count(e.subject_name) as attended_exams
+from students st join subjects s 
+left join examinations e on
+st.student_id = e.student_id and s.subject_name = e.subject_name
+group by st.student_id , s.subject_name
+order by attended_exams desc
