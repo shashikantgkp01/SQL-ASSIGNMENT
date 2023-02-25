@@ -1,1 +1,39 @@
 
+#createing database
+create database hive_project;
+
+#use database
+use hive_project;
+
+#create table statement
+create table agent_performance(
+sl_no int,
+`date` string,
+agent_name string,
+total_chats int,
+avg_responce_time string,
+avg_resolution_time string,
+avg_rating float,
+total_feedback int)
+row format delimited
+fields terminated by '.'
+tblproperties ("skip.header.line.count"="1");
+
+#loading data from hdfs location
+load data inpath '/hive_project/' into table agent_performance;
+
+#creating orc file so that query will take less time in execution
+
+create table agent_performance_orc(
+sl_no int,
+`date` string,
+agent_name string,
+total_chats int,
+avg_responce_time string,
+avg_resolution_time string,
+avg_rating float,
+total_feedback int)
+stored as orc;
+
+#loading data into orc table 
+insert overwrite table agent_performance_orc select * from agent_performance;
