@@ -1715,3 +1715,31 @@ AS (SELECT a.action_date,count(r.post_id) / cast(count(a.post_id) AS FLOAT) AS r
     GROUP BY a.action_date)  
 SELECT round(avg(remove_per_day), 2) * 100 AS average_daily_percent
 FROM cte
+
+
+####Q.74 
+Write an SQL query to report the fraction of players that logged in again on the day after the day they
+first logged in, rounded to 2 decimal places. In other words, you need to count the number of players
+that logged in for at least two consecutive days starting from their first login date, then divide that
+number by the total number of players.
+
+
+create table activity(
+player_id int,
+device_id int,
+event_date date,
+games_played int,
+primary key (player_id,event_date));
+
+insert into activity values (1,2,'2016-03-01',5),
+(1,2,'2016-03-02',6),
+(2,3,'2017-06-25',1),
+(3,1,'2016-03-02',0),
+(3,4,'2018-07-03',5);
+
+
+with cte as(
+select player_id, min(event_date) as first_login from activity
+group by player_id)
+select round((count(distinct r.player_id)/(select count(distinct player_id) from activity)),2) as fraction
+from cte r join activity a on r.player_id=a.player_id and datediff(r.first_login,a.event_date)=-1
