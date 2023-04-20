@@ -1676,3 +1676,42 @@ manager_id  in (select employee_id from employees where manager_id =1))
 and employee_id !=1
 
 
+####Q.73 Write an SQL query to find the average daily percentage of posts that got removed after being
+reported as spam, rounded to 2 decimal places.
+
+create table actions (
+user_id int,
+post_id int,
+action_date date,
+action varchar(50),
+extra varchar(50));
+insert into actions values (1,1,'2019-07-01','view','null'),
+(1,1,'2019-07-01','like','null'),
+(1,1,'2019-07-01','share','null'),
+(2,2,'2019-07-04','view','null'),
+(2,2,'2019-07-04','report','spam'),
+(3,4,'2019-07-04','view','null'),
+(3,4,'2019-07-04','report','spam'),
+(4,3,'2019-07-02','view','null'),
+(4,3,'2019-07-02','report','spam'),
+(5,2,'2019-07-03','view','null'),
+(5,2,'2019-07-03','report','racism'),
+(5,5,'2019-07-03','view','null'),
+(5,5,'2019-07-03','report','racism');
+
+create table removals (post_id int,
+remove_date date);
+
+insert into removals values (2,'2019-07-20'),
+(3,'2019-07-18');
+
+
+WITH cte
+AS (SELECT a.action_date,count(r.post_id) / cast(count(a.post_id) AS FLOAT) AS remove_per_day
+    FROM actions  AS a
+    LEFT JOIN removals AS r ON a.post_id = r.post_id
+    WHERE a.action = 'report'
+        AND a.extra = 'spam'
+    GROUP BY a.action_date)  
+SELECT round(avg(remove_per_day), 2) * 100 AS average_daily_percent
+FROM cte
