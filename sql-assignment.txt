@@ -1743,3 +1743,7 @@ select player_id, min(event_date) as first_login from activity
 group by player_id)
 select round((count(distinct r.player_id)/(select count(distinct player_id) from activity)),2) as fraction
 from cte r join activity a on r.player_id=a.player_id and datediff(r.first_login,a.event_date)=-1
+
+
+####Q75. 
+SAME AS Q.74
