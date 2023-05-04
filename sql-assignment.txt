@@ -2015,3 +2015,46 @@ where rnk=2
 group by month
 
 
+####Q.83
+Google's marketing team is making a Superbowl commercial and needs a simple statistic to put on
+their TV ad: the median number of searches a person made last year.
+However, at Google scale, querying the 2 trillion searches is too costly. Luckily, you have access to the
+summary table which tells you the number of searches made last year and how many Google users
+fall into that bucket.
+Write a query to report the median of searches made by a user. Round the median to one decimal
+point.
+
+
+
+
+
+
+create table search_frequency(
+searches int,
+num_users int);
+
+insert into search_frequency values (1,2),
+(2,2),
+(3,3),
+(4,1);
+
+with tmp_freq as (
+	select searches,num_users,
+    row_number() over(order by searches) as row_num,
+    count(*) over(order by searches rows between unbounded preceding and unbounded following) as total_records
+    from search_frequency),
+tmp_freq2 as (
+		select searches,num_users,
+        case when total_records % 2 <> 0 then (
+			select distinct round(sum(searches) over w / count(*) over w ,1)
+            from tmp_freq
+            where row_num = round((total_records +1) /2,0)
+            window w as (order by searches rows between unbounded preceding and unbounded following))
+		when total_records % 2 =0 then
+            (select distinct round(sum(searches) over w/ count(*) over w ,1)
+             from tmp_freq
+             where row_num in (total_records/2,(total_records/2)+1)
+	         window w as(order by searches rows between unbounded preceding and unbounded following)) end as median
+             from tmp_freq)
+select distinct median from tmp_freq2
+
