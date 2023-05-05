@@ -2058,3 +2058,33 @@ tmp_freq2 as (
              from tmp_freq)
 select distinct median from tmp_freq2
 
+
+
+####Q84.
+Write a query to update the Facebook advertiser's status using the daily_pay table. Advertiser is a
+two-column table containing the user id and their payment status based on the last payment and
+daily_pay table has current information about their payment. Only advertisers who paid will show up in
+this table.
+
+
+create table advertiser (
+user_id varchar(40),
+status varchar(40));
+
+insert into advertiser values('bing','NEW'),
+('yahoo','NEW'),
+('alibaba','EXISTING');
+
+create table daily_pay (
+user_id varchar(40),
+paid float);
+
+insert into daily_pay values ('yahoo',45.00),
+('alibaba',100.00),
+('target',13.00);
+
+select a.user_id ,
+		case when a.user_id in (select user_id from daily_pay) then 'EXISTING'
+        when a.user_id not in (select user_id from daily_pay) then 'CHURN'
+        end as new_status
+from advertiser a left join daily_pay d on a.user_id = d.user_id
