@@ -2207,3 +2207,9 @@ left join customers c on o.customer_id = c.customer_id
  where c.signup_time between '2022-05-31' and '2022-07-01' and o.status != 'completed successfully'
  and (extract(day from o.order_timestamp)-extract(day from c.signup_time)) <=14)
  select round(((select bad_exp from new_cte)/(select total from cte ))*100,2) as bad_experience_pct;
+ 
+ 
+ ####Q.88 same as Q.68
+ 
+ 
+ ####Q.89 sam as Q.55
