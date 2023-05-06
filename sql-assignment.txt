@@ -2213,3 +2213,41 @@ left join customers c on o.customer_id = c.customer_id
  
  
  ####Q.89 sam as Q.55
+ 
+ 
+ ####Q.90
+ The median is the value separating the higher half from the lower half of a data sample.
+Write an SQL query to report the median of all the numbers in the database after decompressing the
+Numbers table. Round the median to one decimal point.
+The query result format is in the following example.
+
+
+
+CREATE TABLE numbers(
+        num INT,
+        frequency INT
+    );
+
+
+INSERT INTO numbers VALUES  
+        (0,7),
+        (1,1),
+        (2,3),
+        (3,1);
+        
+with recursive cte  (num,frequency,i) as (
+select num,frequency,1 from numbers
+union all
+select num,frequency,i+1 from cte where cte.i < cte.frequency
+),
+cte2 as (
+select num,frequency,row_number() over (order by num,frequency) as row_num,
+count(*) over(order by num,frequency rows between unbounded preceding and unbounded following) as total_records from cte
+)
+select distinct case when total_records %2 <>0 then (select distinct round(sum(num) over w /count(*) over w ,1)
+from cte2 where row_num = round((total_records+1)/2,0)
+window w as (order by num,frequency rows between unbounded preceding and unbounded following))
+when total_records % 2 =0 then (select distinct round (sum(num) over w / count(*) over w ,1)
+from cte2 where row_num in (total_records/2,(total_records/2)+1)
+window w as (order by num,frequency rows between unbounded preceding and unbounded following))
+end as median from cte2;
