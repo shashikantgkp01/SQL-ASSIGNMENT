@@ -2094,3 +2094,63 @@ select a.user_id ,
         WHEN A.STATUS = 'RESURRECT' and a.user_id NOT in (select user_id from daily_pay) THEN 'CHURN'
         end as new_status
 from advertiser a left join daily_pay d on a.user_id = d.user_id
+
+
+
+####Q85.
+Amazon Web Services (AWS) is powered by fleets of servers. Senior management has requested
+data-driven solutions to optimise server usage.
+Write a query that calculates the total time that the fleet of servers was running. The output should be
+in units of full days.
+
+
+CREATE TABLE SERVER_UTLIZATION(server_id int,
+status_time timestamp,
+session_status varchar(50));
+
+insert into server_utlization values (1,'2022-08-02 10:00:00','start'),
+(1,'2022-08-04 10:00:00','stop'),
+(2,'2022-08-17 10:00:00','start'),
+(2,'2022-08-24 10:00:00','stop');
+
+
+
+select stop_time - start_time as total_uptime_days from (
+select sum(case when session_status = 'start' then extract(day from status_time)end) as start_time,
+		sum(case when session_status = 'stop' then extract(day from status_time) end ) as stop_time
+        from server_utlization) t;
+	
+	
+	
+
+####Q86.
+Sometimes, payment transactions are repeated by accident; it could be due to user error, API failure or
+a retry error that causes a credit card to be charged twice.
+Using the transactions table, identify any payments made at the same merchant with the same credit
+card for the same amount within 10 minutes of each other. Count such repeated payments.
+
+
+create table transactions1 (
+transaction_id int,
+merchant_id int,
+credit_card_id int,
+amount int,
+transaction_timestamp timestamp);
+
+insert into transactions1 values (1,101,1,100,'2022-09-25 12:00:00'),
+(2,101,1,100,'2022-09-25 12:08:00'),
+(3,101,1,100,'2022-09-25 12:28:00'),
+(4,102,2,300,'2022-09-25 12:00:00'),
+(6,102,2,400,'2022-09-25 14:00:00');
+
+with cte as 
+(select merchant_id,
+	   credit_card_id,
+       amount,
+       transaction_timestamp,
+       lag(transaction_timestamp) over w as prev_transact_time,
+       timestampdiff(minute,lag(transaction_timestamp) over w,transaction_timestamp) as difference
+       from transactions1
+       window w as (partition by credit_card_id order by transaction_timestamp)
+       )
+select count(distinct merchant_id) from cte where difference <= 10
