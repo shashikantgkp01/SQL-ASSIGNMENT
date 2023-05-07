@@ -2251,3 +2251,48 @@ when total_records % 2 =0 then (select distinct round (sum(num) over w / count(*
 from cte2 where row_num in (total_records/2,(total_records/2)+1)
 window w as (order by num,frequency rows between unbounded preceding and unbounded following))
 end as median from cte2;
+
+
+
+
+####Q.91 Write an SQL Query to report the comparison result (higher/lower/same) of the average salary of 
+     employees in a department to the companys average salary. Return the result table in any order.
+     
+     
+     
+     create table salary (id int primary key,
+employee_id int,
+amount int,
+pay_date date,
+foreign key (employee_id) references employee1(employee_id));
+
+insert into salary values (1,1,9000,'2017-03-31'),
+(2,2,6000,'2017-03-31'),
+(3,3,10000,'2017-03-31'),
+(4,1,7000,'2017-02-28'),
+(5,2,6000,'2017-02-28'),
+(6,3,8000,'2017-02-28');
+
+create table employee1 (employee_id int primary key,
+department_id int);
+insert into employee1 values (1,1),
+(2,2),
+(3,2);
+
+
+with cte as (
+select s.employee_id,e.department_id,s.amount,s.pay_date,
+avg(amount) over(partition by month(pay_date) order by month(pay_date),employee_id 
+rows between unbounded preceding and unbounded following) as company_avg_salary,
+avg(amount) over(partition by month(pay_date),department_id order by month(pay_date)
+rows between unbounded preceding and unbounded following) as department_avg_salary
+from salary s inner join employee1 e on s.employee_id = e.employee_id)
+select distinct date_format(pay_date,'%Y-%m') as pay_month , department_id,
+case when company_avg_salary = department_avg_salary then 'same'
+	 when company_avg_salary > department_avg_salary then 'lower'
+     when company_avg_salary < department_avg_salary then 'heigher'
+	 end as comparision
+     from cte 
+     order by department_id;
+     
+  
