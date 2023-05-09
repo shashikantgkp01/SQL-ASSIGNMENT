@@ -2332,3 +2332,59 @@ round(count(z.player_id)/count(a.player_id),2) as day1_retention
 group by a.event_date;
 
   
+  
+####Q.93 same as Q.50
+
+
+####Q.94 A quiet student is the one who took at least one exam and did not score the high or the low score.
+Write an SQL query to report the students (student_id, student_name) being quiet in all exams. Do not
+return the student who has never taken any exam.
+
+
+CREATE TABLE student(
+        student_id INT,
+        student_name VARCHAR(20),
+        CONSTRAINT prime_key PRIMARY KEY(student_id)
+    );
+
+
+CREATE TABLE exam(
+        exam_id INT,
+        student_id INT,
+        score INT,
+        CONSTRAINT prime_key PRIMARY KEY(exam_id,student_id)
+    );
+
+
+INSERT INTO student VALUES 
+        (1,'DANIEL'),
+        (2,'JADE'),
+        (3,'STELLA'),
+        (4,'JONATHAN'),
+        (5,'WILL');
+
+
+INSERT INTO exam VALUES
+        (10,1,70),
+        (10,2,80),
+        (10,3,90),
+        (20,1,80),
+        (30,1,70),
+        (30,3,80),
+        (30,4,90),
+        (40,1,60),
+        (40,2,70),
+        (40,4,80);
+        
+
+with cte as (
+	select exam_id,student_id,score ,max(score) over(partition by exam_id) as highest,
+    min(score) over(partition by exam_id) as lowest
+    from exam),
+    cte2 as (select distinct student_id from cte where score in (highest,lowest))
+select distinct s.student_id ,s.student_name from cte c inner join student s on
+s.student_id = c.student_id
+where s.student_id not in (select student_id from cte2)
+
+
+####Q.95 same as Q.94
