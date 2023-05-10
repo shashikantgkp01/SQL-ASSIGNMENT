@@ -2858,3 +2858,123 @@ from (
 select name , occupation , row_number() over(partition by occupation order by name ) as row_num
 from occupations) b
 group by row_num;
+
+
+
+####Q110.
+You are given a table, BST, containing two columns: N and P, where N represents the value of a node
+in Binary Tree, and P is the parent of N.
+
+
+CREATE TABLE bst(
+		n INT,
+		p INT
+	);
+
+
+INSERT INTO bst VALUES
+		(1,2),
+		(3,2),
+		(6,8),
+		(9,8),
+		(2,5),
+		(8,5),
+		(5,NULL);
+select n,
+case when n not in (select distinct p from bst where p is not null) then 'Leaf'
+	 when p is null then 'Root'
+     else 'Inner' 
+     end as type from bst
+     order by n;
+
+
+
+
+Q111 .
+Amber's conglomerate corporation just acquired some new companies. Each of the companies
+follows this hierarchy:
+Given the table schemas below, write a query to print the company_code, founder name, total number
+of lead managers, total number of senior managers, total number of managers, and total number of
+employees. Order your output by ascending company_code.
+
+
+
+CREATE TABLE company1(
+		company_code VARCHAR(20),
+		founder VARCHAR(20)
+	);
+
+
+CREATE TABLE lead_manager(
+		lead_manager_code VARCHAR(20),
+		company_code VARCHAR(20)
+	);
+
+
+CREATE TABLE senior_manager(
+		senior_manager_code VARCHAR(20),
+		lead_manager_code VARCHAR(20),
+		company_code VARCHAR(20)
+	);
+
+
+CREATE TABLE manager(
+		manager_code VARCHAR(20),
+		senior_manager_code VARCHAR(20),
+		lead_manager_code VARCHAR(20),
+		company_code VARCHAR(20)
+	);
+
+
+CREATE TABLE employee(
+		employee_code VARCHAR(20),
+		manager_code VARCHAR(20),
+		senior_manager_code VARCHAR(20),
+		lead_manager_code VARCHAR(20),
+		company_code VARCHAR(20)
+	);
+
+
+INSERT INTO company1 VALUES
+		('C1','MONIKA'),
+		('C2','SAMANTHA');
+
+
+INSERT INTO lead_manager VALUES
+		('LM1','C1'),
+		('LM2','C2');
+
+
+INSERT INTO senior_manager VALUES
+		('SM1','LM1','C1'),
+		('SM2','LM1','C1'),
+		('SM3','LM2','C2');    
+
+
+INSERT INTO manager VALUES
+		('M1','SM1','LM1','C1'),
+		('M2','SM3','LM2','C2'),
+		('M3','SM3','LM2','C2');  
+
+
+INSERT INTO employee VALUES
+		('E1','M1','SM1','LM1','C1'),
+		('E2','M1','SM1','LM1','C1'),
+		('E3','M2','SM3','LM2','C2'),
+		('E4','M3','SM3','LM2','C2');
+        
+        
+select c.company_code,c.founder,count(distinct lm.lead_manager_code),count(distinct sm.senior_manager_code),
+count(distinct m.manager_code),count(distinct e.employee_code) from company1 c 
+inner join 
+		lead_manager lm on c.company_code = lm.company_code
+left join
+		senior_manager sm on lm.lead_manager_code = sm.lead_manager_code
+left join 
+		manager m on sm.senior_manager_code = m.senior_manager_code
+left join 
+		employee e on m.manager_code = e.manager_code
+group by 1,2
+order by 1
+
+
