@@ -2388,3 +2388,243 @@ where s.student_id not in (select student_id from cte2)
 
 
 ####Q.95 same as Q.94
+
+
+
+#### Q.96 Write a query to output the user id, song id, and cumulative count of song plays as of 4 August 2022 
+sorted in descending order.
+
+
+CREATE TABLE songs_history(
+	history_id INT,
+	user_id INT,
+	song_id INT,
+	song_plays INT
+	);
+
+
+INSERT INTO songs_history VALUES
+	(10011,777,1238,11),
+	(12452,695,4520,1);
+
+
+CREATE TABLE songs_weekly(
+	user_id INT,
+	song_id INT,
+	listen_time VARCHAR(25)
+	);
+
+
+INSERT INTO songs_weekly VALUES
+        (777,1238,'08/01/2022 12:00:00'),
+	(695,4520,'08/04/2022 08:00:00'),
+	(125,9630,'08/04/2022 16:00:00'),
+	(695,9852,'08/07/2022 12:00:00');
+
+
+with new_table as (
+select user_id,song_id,song_plays from songs_history
+union 
+select user_id,song_id,count(*) as song_plays from songs_weekly where listen_time <= '08/04/2022 23:59:59'
+group by user_id,song_id)
+select user_id,song_id,sum(song_plays) as song_plays from new_table 
+group by user_id, song_id 
+order by song_plays desc;
+
+
+####Q.97 Write a query to find the confirmation rate of users who confirmed their signups with text messages. 
+Round the result to 2 decimal places.
+
+
+CREATE TABLE emails(
+	email_id INT,
+	user_id INT,
+	signup_date DATETIME
+	);
+
+
+INSERT INTO emails VALUES
+	(125,7771,'2022-06-14 00:00:00'),
+	(236,6950,'2022-07-01 00:00:00'),
+	(433,1052,'2022-07-09 00:00:00');
+
+
+CREATE TABLE texts(
+	text_id INT,
+	email_id INT,
+	signup_action VARCHAR(20)
+	);
+
+
+INSERT INTO texts VALUES
+	(6878,125,'CONFIRMED'),
+	(6920,236,'NOT CONFIRMED'),
+	(6994,236,'CONFIRMED');
+	
+	
+	
+with cte as (select e.email_id,
+case when t.signup_action = 'CONFIRMED' then 1 
+end as confirmed_users
+from emails e left join 
+texts t on e.email_id = t.email_id and
+t.signup_action = 'CONFIRMED')
+select round(sum(confirmed_users)/count(email_id),2) as confirmation_rate from cte;
+
+
+
+####Q.98 Calculate the 3-day rolling average of tweets published by each user for each date 
+ that a tweet was posted. Output the user id, tweet date, and rolling averages rounded to 2 decimal places.
+ 
+ 
+ CREATE TABLE tweets(
+	tweet_id INT,
+	user_id INT,
+	tweet_date DATETIME
+	);
+
+
+INSERT INTO TWEETS VALUES
+	(214252,111,'2022-06-01 12:00:00'),
+	(739252,111,'2022-06-01 12:00:00'),
+	(846402,111,'2022-06-02 12:00:00'),
+	(241425,254,'2022-06-02 12:00:00'),
+	(137374,111,'2022-06-04 12:00:00');
+    
+with cte as ( select user_id,tweet_date,count(tweet_id) as tweet_count
+from tweets group by 1,2 order by 1,2)
+select user_id,tweet_date,round(avg(tweet_count) over(partition by user_id order by tweet_date rows between
+2 preceding and current row),2) as rolling_avg_of_3days from cte;
+
+
+
+
+####Q.99 Write a query to obtain a breakdown of the time spent sending vs. opening snaps 
+(as a percentage of total time spent on these activities) for each age group.
+
+
+CREATE TABLE activities(
+	activity_id INT,
+	user_id INT,
+	activity_type ENUM('SEND','OPEN','CHAT'),
+	time_spent FLOAT,
+	activity_date varchar(25)
+	);
+
+
+INSERT INTO activities VALUES
+	(7274,123,'OPEN',4.50,'06/22/2022 12:00:00'),
+	(2425,123,'SEND',3.50,'06/22/2022 12:00:00'),
+	(1413,456,'SEND',5.67,'06/23/2022 12:00:00'),
+	(1414,789,'CHAT',11.00,'06/25/2022 12:00:00'),
+	(2536,456,'OPEN',3.00,'06/25/2022 12:00:00');
+
+
+CREATE TABLE age_breakdown(
+        user_id INT,
+        age_bucket ENUM('21-25','26-30','31-35')
+	);
+
+
+INSERT INTO age_breakdown VALUES
+        (123,'31-35'),
+        (456,'26-30'),
+        (789,'21-25');
+	
+	
+CREATE TABLE activities(
+	activity_id INT,
+	user_id INT,
+	activity_type ENUM('SEND','OPEN','CHAT'),
+	time_spent FLOAT,
+	activity_date varchar(25)
+	);
+
+
+INSERT INTO activities VALUES
+	(7274,123,'OPEN',4.50,'06/22/2022 12:00:00'),
+	(2425,123,'SEND',3.50,'06/22/2022 12:00:00'),
+	(1413,456,'SEND',5.67,'06/23/2022 12:00:00'),
+	(1414,789,'CHAT',11.00,'06/25/2022 12:00:00'),
+	(2536,456,'OPEN',3.00,'06/25/2022 12:00:00');
+
+
+CREATE TABLE age_breakdown(
+        user_id INT,
+        age_bucket ENUM('21-25','26-30','31-35')
+	);
+
+
+INSERT INTO age_breakdown VALUES
+        (123,'31-35'),
+        (456,'26-30'),
+        (789,'21-25');
+        
+with cte as (select user_id , activity_type ,sum(time_spent) as time_spent ,
+case when activity_type = 'SEND' then sum(time_spent) end as send_snap,
+case when activity_type = 'OPEN' then sum(time_spent) end as open_snap
+from activities where activity_type in ('OPEN','SEND')
+ group by 1,2 order by 1)
+, cte2 as (select user_id,sum(open_snap) as time_send,sum(send_snap) as time_open from cte group by 1)
+select a.age_bucket,round(time_open*100/(time_open+time_send),2) as send_perc , round(time_send*100/(time_open+time_send),2) as open_perc
+from cte2 c inner join age_breakdown a on
+c.user_id = a.user_id
+order by 1;
+
+
+
+####Q.100 Write a query to return the IDs of these LinkedIn power creators in ascending order.
+
+
+CREATE TABLE personal_profiles(
+	profile_id INT,
+	name VARCHAR(20),
+	followers INT
+	);
+
+
+INSERT INTO personal_profiles VALUES
+	(1,'NICK SINGH',92000),
+	(2,'ZACH WILSON',199000),
+	(3,'DALIANA LIU',171000),
+	(4,'RAVIT JAIN',107000),
+	(5,'VIN VASHISHTA',139000),
+	(6,'SUSAN WOJCICKI',39000);
+
+
+CREATE TABLE employee_company(
+	personal_profile_id INT,
+	company_id INT
+	);
+
+
+INSERT INTO employee_company VALUES
+	(1,4),
+	(1,9),
+	(2,2),
+	(3,1),
+	(4,3),
+	(5,6),
+	(6,5);
+
+
+CREATE TABLE company_pages(
+	company_id INT,
+	name VARCHAR(30),
+	followers INT
+	);
+
+
+INSERT INTO company_pages VALUES
+	(1,'THE DATA SCIENCE PODCAST',8000),
+        (2,'AIRBNB',700000),
+	(3,'THE RAVIT SHOW',6000),
+	(4,'DATA LEMUR',200),
+	(5,'YOUTUBE',16000000),
+	(6,'DATASCIENCE.VIN',4500),
+	(9,'ACE THE DATA SCIENCE INTERVIEW',4479);
+	
+SELECT DISTINCT PROFILE_ID FROM PERSONAL_PROFILES P INNER JOIN EMPLOYEE_COMPANY E ON P.PROFILE_ID = E.PERSONAL_PROFILE_ID
+INNER JOIN COMPANY_PAGES C ON E.COMPANY_ID = C.COMPANY_ID
+WHERE P.FOLLOWERS > C.FOLLOWERS
+ORDER BY 1;
