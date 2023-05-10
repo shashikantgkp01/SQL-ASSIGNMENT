@@ -2628,3 +2628,34 @@ SELECT DISTINCT PROFILE_ID FROM PERSONAL_PROFILES P INNER JOIN EMPLOYEE_COMPANY 
 INNER JOIN COMPANY_PAGES C ON E.COMPANY_ID = C.COMPANY_ID
 WHERE P.FOLLOWERS > C.FOLLOWERS
 ORDER BY 1;
+
+
+
+####Q.101 Write an SQL query to show the second most recent activity of each user.
+If the user only hAS one activity, return that one. A user cannot perform more than one activity at the same time.
+Return the result table in any order.
+
+
+CREATE TABLE user_activity(
+		username VARCHAR(20),
+		activity VARCHAR(20),
+		start_date DATE,
+		end_date DATE
+	);
+
+
+INSERT INTO user_activity VALUES
+		('ALICE','TRAVEL','2020-02-12','2020-02-20'),
+		('ALICE','DANCING','2020-02-21','2020-02-23'),
+		('ALICE','TRAVEL','2020-02-24','2020-02-28'),
+		('BOB','TRAVEL','2020-02-11','2020-02-18'); 
+
+
+with cte as (
+SELECT username , activity,start_date,end_date ,row_number () over(partition by username order by start_date,end_date) as row_num
+, count(*) over(partition by username order by start_date,end_date rows between unbounded preceding and unbounded following) as total_activity
+from user_activity1
+),
+cte2 as (select username,activity,start_date,end_date,if(total_activity =1 and row_num =1 ,2,row_num) as ranking 
+from cte)
+select username,activity,start_date,end_date from cte2 where ranking =2
