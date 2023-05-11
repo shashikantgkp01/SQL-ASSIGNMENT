@@ -3376,3 +3376,611 @@ group by
 having 
 		count(c.challenge_id) >1;
 
+
+####Q146.
+You are given a table, Projects, containing three columns: Task_ID, Start_Date and End_Date. It is
+guaranteed that the difference between the End_Date and the Start_Date is equal to 1 day for each
+row in the table.
+
+
+CREATE TABLE projects(
+		task_id INT,
+		start_date DATE,
+		end_date DATE
+	);
+
+
+INSERT INTO projects VALUES
+		(1,'2015-10-01','2015-10-02'),
+		(2,'2015-10-02','2015-10-03'),
+		(3,'2015-10-03','2015-10-04'),
+		(4,'2015-10-13','2015-10-14'),
+		(5,'2015-10-14','2015-10-15'),
+		(6,'2015-10-28','2015-10-29'),
+		(7,'2015-10-30','2015-10-31');
+WITH project_start AS 
+                    (
+                        SELECT 
+                                start_date, 
+                                ROW_NUMBER() OVER() AS ps_rownum
+                        FROM 
+                                projects
+                        WHERE start_date not in (
+                                                    SELECT 
+                                                            end_date 
+                                                    FROM 
+                                                            projects
+                                                )
+                    ),
+    project_end AS 
+                 (
+                        SELECT 
+                                end_date, 
+                                ROW_NUMBER() OVER() AS pe_rownum
+                        FROM 
+                                projects
+                        WHERE 
+                                END_date not in (
+                                                    SELECT 
+                                                            start_date 
+                                                    FROM 
+                                                            projects
+                                                )
+                )
+
+SELECT 
+        project_start.start_date, 
+        project_end.end_date
+FROM 
+        project_start
+INNER JOIN 
+        project_end
+on 
+        project_end.pe_rownum = project_start.ps_rownum
+ORDER BY 
+        DATEDIFF(project_start.start_date, project_end.end_date) desc, 
+        project_start.start_date;
+
+####Q147.
+In an effort to identify high-value customers, Amazon asked for your help to obtain data about users
+who go on shopping sprees. A shopping spree occurs when a user makes purchases on 3 or more
+consecutive days.
+List the user IDs who have gone on at least 1 shopping spree in ascending order.
+
+
+CREATE TABLE transactions(
+		user_id INT,
+		amount FLOAT,
+		transaction_date DATETIME
+	);
+
+
+INSERT INTO transactions VALUES
+		(1,9.99,'08/01/2022 10:00:00'),
+		(1,55,'08/17/2022 10:00:00'),
+		(2,149.5,'08/05/2022 10:00:00'),
+		(2,4.89,'08/06/2022 10:00:00'),
+		(2,34,'08/07/2022 10:00:00');
+
+
+
+SELECT 
+        DISTINCT user_id 
+FROM 
+    (
+        SELECT 
+                user_id, 
+                transaction_date,
+                rn,
+                transaction_date :: date - rn::integer,
+                COUNT(transaction_date :: date - rn::integer) OVER(PARTITION BY user_id) AS cn
+        FROM
+                (
+                    SELECT 
+                            user_id, 
+                            transaction_date,
+                            ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY transaction_date) AS rn
+                    FROM 
+                            transactions
+                ) temp
+    )temp1
+
+WHERE cn >=3;
+
+
+####Q148 .
+You are given a table of PayPal payments showing the payer, the recipient, and the amount paid. A
+two-way unique relationship is established when two people send money back and forth. Write a
+query to find the number of two-way unique relationships in this data.
+
+CREATE TABLE payments(
+		payer_id INT,
+		recipient_id INT,
+		amount INT
+	);
+
+
+INSERT INTO payments VALUES
+		(101,201,30),
+		(201,101,10),
+		(101,301,20),
+		(301,101,80),
+		(201,301,70);
+        
+        
+with transactions as (
+						select p.payer_id,
+							   p.recipient_id
+						from payments p 
+                         inner join payments py on
+                         p.payer_id = py.recipient_id
+									and
+						p.recipient_id = py.payer_id
+									and
+						p.payer_id < py.payer_id
+					)
+select count(*) as unique_relationship from transactions;
+
+
+
+####Q.149 Write a query to obtain the list of customers whose first transaction was valued at $50 or more.
+Output the number of users.
+
+
+CREATE TABLE user_transactions(
+		transaction_id INT,
+		user_id INT,
+		spend FLOAT,
+		transaction_date VARCHAR(30)
+	);
+
+
+INSERT INTO user_transactions VALUES
+		(759274,111,49.50,'02/03/2022 00:00:00'),
+		(850371,111,51.00,'03/15/2022 00:00:00'),
+		(615348,145,36.30,'03/22/2022 00:00:00'),
+		(137424,156,151.00,'04/04/2022 00:00:00'),
+		(248475,156,87.00,'04/16/2022 00:00:00');
+		
+	
+CREATE TABLE user_transactions1(
+		transaction_id INT,
+		user_id INT,
+		spend FLOAT,
+		transaction_date VARCHAR(30)
+	);
+
+
+INSERT INTO user_transactions1 VALUES
+		(759274,111,49.50,'02/03/2022 00:00:00'),
+		(850371,111,51.00,'03/15/2022 00:00:00'),
+		(615348,145,36.30,'03/22/2022 00:00:00'),
+		(137424,156,151.00,'04/04/2022 00:00:00'),
+		(248475,156,87.00,'04/16/2022 00:00:00');
+
+with transactions as (
+						select 
+								user_id,
+                                transaction_date,
+                                spend,
+                                row_number() over(partition by user_id order by transaction_date) as row_num
+						from 
+								user_transactions1)
+select 
+		count(distinct user_id) 'user'
+        from transactions
+        where row_num =1 
+				and
+			spend >= 50;
+			
+			
+####Q.150 Write a query to obtain the SUM of the odd-numbered and even-numbered meASurements on a particular day, 
+in two different columns.
+
+
+CREATE TABLE measurments(
+		measurment_id INT,
+		measurment_value FLOAT,
+		measurment_time DATETIME
+	);
+
+
+INSERT INTO measurments VALUES
+		(131233,1109.51,'07/10/2022 09:00:00'),
+		(135211,1662.74,'07/10/2022 11:00:00'),
+		(523542,1246.24,'07/10/2022 13:15:00'),
+		(143562,1124.50,'07/11/2022 15:00:00'),
+		(346462,1234.14,'07/11/2022 16:45:00');
+
+
+
+WITH temp_measurments AS (
+                            SELECT
+                                    measurement_value,
+                                    measurement_time,
+                                    ROW_NUMBER() OVER(PARTITION BY measurement_time::DATE ORDER BY measurement_time) row_num
+                            FROM 
+                                    measurments
+                )
+
+SELECT 
+        measurement_time::DATE,,
+        ROUND(SUM(
+            CASE
+                WHEN row_num % 2 <> 0 THEN measurment_value
+                END),2) AS odd_value,
+        ROUND(SUM(
+            CASE
+                WHEN row_num % 2 = 0 THEN measurment_value
+                END),2) AS even_value
+FROM 
+        temp_measurments
+GROUP BY 
+        measurement_time::DATE,
+ORDER BY 
+        measurement_time;
+	
+	
+	
+	
+####Q.151 same as Q.147
+
+
+
+
+####Q.152 The Airbnb Booking RecommENDations team is trying to understand the "substitutability" of two rentals 
+and whether one rental is a good substitute for another. They want you to write a query to find the unique 
+combination of two Airbnb rentals WITH the same exact amenities offered. Output the COUNT of the unique 
+combination of Airbnb rentals.
+
+
+CREATE TABLE rental_amenities(
+		rental_id INT,
+		amenity VARCHAR(20)
+	);
+
+
+INSERT INTO rental_amenities VALUES
+		(123,'POOL'),
+		(123,'KITCHEN'),
+		(234,'HOT TUB'),
+		(234,'FIREPLACE'),
+		(345,'KITCHEN'),
+		(345,'POOL'),
+		(456,'POOL');
+
+
+
+WITH rent_amenities AS (
+                        SELECT 
+                                rental_id, 
+                                amenity, 
+                                COUNT(amenity) over(partition by rental_id) AS no_of_amenities 
+                        FROM 
+                                rental_amenities
+            ),
+
+rent_amenities2 AS (
+                        SELECT 
+                                COUNT(*) 
+                        FROM 
+                                rent_amenities r
+                        inner join 
+                                rent_amenities ra 
+                        on 
+                                r.no_of_amenities = ra.no_of_amenities
+                        AND 
+                                r.amenity = ra.amenity
+                        AND 
+                                r.rental_id<>ra.rental_id
+                        GROUP BY 
+                                r.rental_id,
+                                ra.rental_id, 
+                                r.no_of_amenities
+                        HAVING 
+                                COUNT(*) = r.no_of_amenities
+            )
+
+
+SELECT 
+        CEIL(COUNT(*)/2) as matching_airbnb
+FROM 
+        rent_amenities2;
+
+
+
+
+
+####Q.153 Write a query to calculate the return on ad spend (ROAS) for each advertiser 
+across all ad campaigns. Round your answer to 2 decimal places, and order your 
+output by the advertiser_id.
+
+
+CREATE TABLE ad_campaigns(
+		campaign_id INT,
+		spend INT,
+		revenue FLOAT,
+		advertiser_id INT
+	);
+
+
+INSERT INTO ad_campaigns VALUES
+		(1,5000,7500,3),
+		(2,1000,900,1),
+		(3,3000,12000,2),
+		(4,500,200,4),
+		(5,100,400,4);
+
+
+SELECT 
+        advertiser_id, 
+        CAST(SUM(revenue) / SUM(spend) AS Decimal(8,2)) AS ROAS
+FROM 
+        ad_campaigns
+GROUP BY 
+        advertiser_id
+ORDER BY 
+        advertiser_id;
+
+
+
+####Q.154 Write a query that shows the following data for each compensation outlier: 
+employee ID, salary, and whether they are potentially overpaid or potentially underpaid
+
+
+CREATE TABLE employee_pay(
+		employee_id INT,
+		salary INT,
+		title VARCHAR(20)
+	);
+
+
+INSERT INTO employee_pay VALUES
+		(101,80000,'DATA ANALYST'),
+		(102,90000,'DATA ANALYST'),
+		(103,100000,'DATA ANALYST'),
+		(104,30000,'DATA ANALYST'),
+		(105,120000,'DATA SCIENTIST'),
+		(106,100000,'DATA SCIENTIST'),
+		(107,80000,'DATA SCIENTIST'),
+		(108,310000,'DATA SCIENTIST');
+
+
+WITH temp_compensation AS (
+                            SELECT 
+                                    employee_id,
+                                    salary,
+                                    title,
+                                    ROUND(AVG(salary) over(PARTITION BY title),2) AS avg_salary 
+                            FROM 
+                                    employee_pay
+                ),
+    temp_compensation2 AS (
+                            SELECT
+                                    employee_id, 
+                                    salary,
+                                    CASE
+                                        WHEN salary > 2 * avg_salary THEN 'Overpaid'
+                                        WHEN salary < avg_salary/2 THEN 'Underpaid'
+                                        END AS status
+                            FROM 
+                                    temp_compensation
+                )
+
+SELECT 
+        employee_id, 
+		salary, 
+		status
+FROM 
+        temp_compensation2 
+WHERE 
+        status is not null;
+
+
+
+####Q.155 SAME AS 148
+
+
+
+####Q.156 Assume you are given the table below containing information on user
+purchASes. Write a query to obtain the number of users who purchASed the 
+same product on two or more different days. Output the number of unique users.
+
+
+CREATE TABLE purchases(
+		user_id INT,
+		product_id INT,
+		quantity INT,
+		purchase_date DATETIME
+	);
+
+
+INSERT INTO purchases VALUES
+		(536,3223,6,'2022-01-11 12:33:44'),
+		(827,3585,35,'2022-02-20 14:05:26'),
+		(536,3223,5,'2022-03-02 09:33:28'),
+		(536,1435,10,'2022-03-02 08:40:00'),
+		(827,2452,45,'2022-04-09 00:00:00');
+
+
+SELECT 
+        COUNT(DISTINCT user_id) AS repeat_purchasers
+FROM (
+        SELECT 
+                user_id 
+        FROM 
+                purchases
+        GROUP BY 
+                user_id, 
+                product_id
+        HAVING 
+                COUNT(DISTINCT purchase_date) > 1
+    ) temp;
+
+
+
+####Q.157 Say you have access to all the transactions for a given merchant acCOUNT. 
+Write a query to print the cumulative balance of the merchant acCOUNT at the END 
+of each day, WITH the total balance reset back to zero at the END of the month. 
+Output the transaction date and cumulative balance.
+
+
+CREATE TABLE transactions(
+		transaction_id INT,
+		type ENUM('DEPOSIT','WITHDRAWL'),
+		amount FLOAT,
+		transaction_date DATETIME
+	);
+
+
+INSERT INTO transactions VALUES
+		(19153,'DEPOSIT',65.90,'07/10/2022 10:00:00'),
+		(53151,'DEPOSIT',178.55,'07/08/2022 10:00:00'),
+		(29776,'WITHDRAWL',25.90,'07/08/2022 10:00:00'),
+		(16461,'WITHDRAWL',45.99,'07/08/2022 10:00:00'),
+		(77134,'DEPOSIT',32.60,'07/10/2022 10:00:00');
+
+
+
+SELECT 
+        DISTINCT date(transaction_date),
+        SUM(
+            CASE 
+                WHEN type = 'deposit' THEN amount
+                ELSE -amount
+                END
+            ) OVER(PARTITION BY EXTRACT(MONTH FROM transaction_date) ORDER BY DATE(transaction_date)) AS balance
+FROM 
+        transactions;
+
+
+
+
+
+
+####Q.158 Assume you are given the table below containing information on 
+Amazon customers and their spend on products belonging to various 
+categories. Identify the top two highest-grossing products within each 
+category in 2022. Output the category, product, and total spend.
+
+
+CREATE TABLE product_spend(
+		category VARCHAR(20),
+		product VARCHAR(20),
+		user_id INT,
+		spend FLOAT,
+		transaction_date DATETIME
+	);
+
+
+INSERT INTO product_spend VALUES
+		('APPLIANCE','REFRIGERATOR',165,246.00,'12/26/2021 12:00:00'),
+		('APPLIANCE','REFRIGERATOR',123,299.99,'03/02/2022 12:00:00'),
+		('APPLIANCE','WASHING MACHINE',123,219.80,'03/02/2022 12:00:00'),
+		('ELECTRONICS','VACUUM',178,152.00,'04/05/2022 12:00:00'),
+		('ELECTRONICS','WIRELESS HEADSET',156,249.90,'07/08/2022 12:00:00'),
+		('ELECTRONICS','REFRIGERATOR',145,189.00,'07/15/2022 12:00:00');
+
+
+WITH temp_product_details AS (
+                                SELECT 
+                                        category, 
+                                        product,
+                                        spend,
+                                        SUM(spend) OVER(PARTITION BY category, product) total_spend
+                                FROM 
+                                        product_spend
+                                WHERE 
+                                        EXTRACT(YEAR FROM transaction_date) = 2022
+                 ),
+
+    temp_product_details1 AS (
+                                SELECT 
+                                        DISTINCT category, 
+                                        product, 
+                                        total_spend ,
+                                        DENSE_RANK() OVER(PARTITION BY category order by total_spend desc) row_num
+                                FROM 
+                                        temp_product_details
+               )
+
+
+SELECT 
+        DISTINCT category, 
+        product, 
+        total_spend 
+FROM 
+        temp_product_details1 
+WHERE 
+        row_num <=2
+ORDER BY 
+        category, 
+        total_spend DESC;
+
+
+
+
+
+####Q.159 Facebook is analysing its user signup data for June 2022. 
+Write a query to generate the churn rate by week in June 2022. 
+Output the week number (1, 2, 3, 4, ...) and the corresponding 
+churn rate rounded to 2 decimal places.
+
+
+CREATE TABLE users(
+		user_id INT,
+		signup_date DATETIME,
+		last_login DATETIME
+	);
+
+
+INSERT INTO users VALUES
+		(1001,'2022-06-01 12:00:00','2022-07-05 12:00:00'),
+		(1002,'2022-06-03 12:00:00','2022-06-15 12:00:00'),
+		(1004,'2022-06-02 12:00:00','2022-06-15 12:00:00'),
+		(1006,'2022-06-15 12:00:00','2022-06-27 12:00:00'),
+		(1012,'2022-06-16 12:00:00','2022-07-22 12:00:00');
+
+
+
+
+
+WITH temp_churn_rate AS (
+                        SELECT 
+                                user_id, 
+                                signup_date, 
+                                last_login,
+                                DATEDIFF(last_login, signup_date) diff, 
+                                EXTRACT(WEEK FROM signup_date) AS week_no,
+                                WEEK(signup_date,5) -  WEEK(DATE_SUB(signup_date, INTERVAL DAYOFMONTH(signup_date)-1 DAY),5)+1 AS ranking
+                        FROM 
+                                users
+                        WHERE 
+                                EXTRACT(MONTH FROM signup_date) = 6 
+                                AND
+                                EXTRACT(YEAR FROM signup_date) = 2022
+),
+temp_churn_rate2 AS (
+                        SELECT 
+                                ranking, 
+                                COUNT(ranking) AS total_users,
+                                COUNT(
+                                CASE 
+                                    WHEN diff <= 28 THEN 1
+                                    END 
+                                    ) AS total_churns 
+                        FROM 
+                                temp_churn_rate
+                        GROUP BY 
+                                ranking
+)
+
+SELECT 
+        ranking AS week, 
+        ROUND((total_churns/total_users) * 100 ,2) AS churn_rate
+FROM 
+        temp_churn_rate2
+ORDER BY 
+        ranking;
+        
+        
