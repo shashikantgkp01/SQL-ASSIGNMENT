@@ -2978,3 +2978,236 @@ group by 1,2
 order by 1
 
 
+
+
+####- Q.112 Write a query to print all prime numbers less than or equal to 1000. 
+Print your result on a single line, and use the ampersand () character as 
+your separator (instead of a space).
+
+
+WITH RECURSIVE number_generation AS (
+                                        SELECT 
+                                                1 num
+
+                                        UNION ALL
+
+                                        SELECT 
+                                                num + 1 
+                                        FROM 
+                                                number_generation 
+                                        WHERE 
+                                                num<1000
+                    ),
+                number_generation2 AS (
+                                        SELECT 
+                                                n1.num AS numm 
+                                        FROM 
+                                                number_generation n1
+                                        INNER JOIN 
+                                                number_generation n2
+                                        WHERE 
+                                                n1.num % n2.num = 0
+                                        GROUP BY 
+                                                n1.num
+                                        HAVING 
+                                                COUNT(n1.num) = 2
+                    )
+
+
+SELECT 
+        group_concat(numm ORDER BY numm SEPARATOR '&') AS prime_numbers 
+FROM 
+        number_generation2;
+	
+	
+	
+####Q113.
+P(R) represents a pattern drawn by Julia in R rows. The following pattern represents P(5):
+*
+* *
+* * *
+* * * *
+* * * * *
+Write a query to print the pattern P(20).
+
+
+
+with recursive number_generator as 
+									(
+										select 
+												1 n
+										union
+                                        select 
+												n + 1 
+										from 
+												number_generator
+										where 
+												n <20)
+select repeat('*',n) from number_generator;
+
+
+
+
+####Q114.
+P(R) represents a pattern drawn by Julia in R rows. The following pattern represents P(5):
+* * * * *
+* * * *
+* * *
+* *
+*
+Write a query to print the pattern P(20).
+
+
+with recursive number_generator as 
+									(
+										select 
+												20 n
+										union
+                                        select 
+												n - 1 
+										from 
+												number_generator
+										where 
+												n >1)
+select repeat('*',n) from number_generator;
+
+
+
+
+####Q.115 SAME AS Q.103
+
+
+
+####Q.116 SAME AS Q.79
+
+
+
+####Q.117 SAME AS Q.104
+
+
+
+####Q.118 SAME AS Q.105
+
+
+
+####Q.119 SAME AS Q.80
+
+
+
+####Q.120 SAME AS Q.81
+
+
+
+####Q.121 SAME AS Q.82
+
+
+
+####Q.122 SAME AS Q.83
+
+
+
+####Q.123 SAME AS Q.84
+
+
+
+####Q.124 SAME AS Q.85
+
+
+
+####Q.125 SAME AS Q.86
+
+
+
+####Q.126 SAME AS Q.87
+
+
+
+####Q.127 SAME AS Q.68
+
+
+
+####Q.128 SAME AS Q.55
+
+
+
+####Q.129 SAME AS Q.90
+
+
+
+####Q.130 SAME AS Q.91
+
+
+
+####Q.131 SAME AS Q.92
+
+
+
+####Q.132 SAME AS Q.50
+
+
+
+####Q.133 SAME AS Q.94
+
+
+
+####Q.134 SAME AS Q.94
+
+
+
+####Q.135 SAME AS Q.101
+
+
+
+####Q.136 SAME AS Q.101
+
+
+
+####Q.137 SAME AS Q.106
+
+
+
+####Q.138 SAME AS Q.105
+
+
+
+####Q.139 SAME AS Q.105
+
+
+
+####Q.140 SAME AS Q.105
+
+
+
+####Q.141 SAME AS Q.110
+
+
+
+####Q.142 SAME AS Q.111
+
+####Q143 .
+You are given a table, Functions, containing two columns: X and Y.
+Two pairs (X1, Y1) and (X2, Y2) are said to be symmetric pairs if X1 = Y2 and X2 = Y1.
+Write a query to output all such symmetric pairs in ascending order by the value of X. List the rows
+such that X1 ≤ Y1.
+
+
+CREATE TABLE functions(
+		x INT,
+		y INT
+	);
+
+
+INSERT INTO functions VALUES
+		(20,20),
+		(20,20),
+		(20,21),
+		(23,22),
+		(22,23),
+		(21,20);
+        
+select 
+		distinct x , y 
+from
+		functions
+group by x,y
+having x<=y
